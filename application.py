@@ -10,4 +10,14 @@ def updateFileCases():
     update_file_cases(generate_index())
     return "ok"
 
+@app.route('/api/v1/index/file_cases/file_id/<string:file_id>', methods=['PUT'])
+def updateFileCase(file_id):
+    update_file_cases(generate_index(file_id=file_id))
+    return "ok"
+
+@app.route('/api/v1/index/file_cases/release_ver/<string:release_ver>', methods=['PUT'])
+def updateFileCaseRelease(release_ver):
+    update_file_cases(generate_index(release_ver=release_ver))
+    return "ok"
+
 app.run()

@@ -12,7 +12,7 @@ def get_index_doc_json(index_doc):
     index_doc.cases = index_doc.cases.__dict__
     return '{"doc":' + json.dumps(index_doc.__dict__) + ',"doc_as_upsert":true}'
 
-def generate_index():
+def generate_index(file_id = None, release_ver = None):
     load_dotenv()
 
     mysql_user = os.environ.get('mysql_user')
@@ -26,26 +26,16 @@ def generate_index():
     )
     mycursor = mydb.cursor(buffered=True, dictionary=True)
 
-    # where_clause = ""
-
-    # parser = ArgumentParser(description="Generate ES index updates. No arguments will create updates for all records.")
-    # parser.add_argument("-f", "--file_id", dest="file_id",
-    #                     help="file ID")
-    # parser.add_argument("-v", "--release_ver",
-    #                     dest="release_ver",
-    #                     help="target release version")
-    #
-    # args = parser.parse_args()
-    #
-    # if args.file_id:
-    #     where_clause = " WHERE f.file_id = '" + args.file_id + "' "
-    # elif args.release_ver:
-    #     where_clause = " WHERE f.release_ver = " + args.release_ver + " "
+    where_clause = ""
+    if file_id is not None:
+        where_clause = " WHERE f.file_id = '" + file_id + "' "
+    elif release_ver is not None:
+        where_clause = " WHERE f.release_ver = " + release_ver + " "
 
     query = ("SELECT f.*, fp.*, p.*, m.* FROM file f "  
               "JOIN file_participant fp on f.file_id = fp.file_id "
               "JOIN participant p on fp.participant_id = p.participant_id "
-              "JOIN metadata_type m on f.metadata_type_id = m.metadata_type_id")
+              "JOIN metadata_type m on f.metadata_type_id = m.metadata_type_id " + where_clause)
 
     mycursor.execute(query)
     row_num = 1
