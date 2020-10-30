@@ -1,6 +1,5 @@
 import json
 import mysql.connector
-from dotenv import load_dotenv
 import os
 from index_creator.models.FileCasesIndexDoc import FileCasesIndexDoc
 from index_creator.models.IndexDoc import IndexDoc
@@ -13,13 +12,15 @@ def get_index_doc_json(index_doc):
     return '{"doc":' + json.dumps(index_doc.__dict__) + ',"doc_as_upsert":true}'
 
 def generate_index(file_id = None, release_ver = None):
-    load_dotenv()
 
-    mysql_user = os.environ.get('mysql_user')
-    mysql_pwd = os.environ.get('mysql_pwd')
+    mysql_user = os.environ.get('MYSQL_USER')
+    mysql_pwd = os.environ.get('MYSQL_ROOT_PASSWORD')
+
+    print(mysql_user)
+    print (mysql_pwd)
 
     mydb = mysql.connector.connect(
-        host="localhost",
+        host="mariadb",
         user=mysql_user,
         password=mysql_pwd,
         database="knowledge_environment"

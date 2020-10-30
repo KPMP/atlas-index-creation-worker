@@ -1,11 +1,10 @@
 import flask
-from flask import request, jsonify
 from index_creator.core.index_creation import generate_index
 from index_creator.core.update_es import update_file_cases
 
 app = flask.Flask(__name__)
 
-@app.route('/api/v1/index/file_cases', methods=['GET'])
+@app.route('/api/v1/index/file_cases', methods=['PUT'])
 def updateFileCases():
     update_file_cases(generate_index())
     return "ok"
@@ -20,4 +19,5 @@ def updateFileCaseRelease(release_ver):
     update_file_cases(generate_index(release_ver=release_ver))
     return "ok"
 
-app.run()
+if __name__ == '__main__':
+    app.run(debug=True,host='0.0.0.0')
