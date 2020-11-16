@@ -19,17 +19,18 @@ def updateFileCases():
         update_file_cases(update_statement)
         return "ok - updated with all files"
     except:
-        app.logger.error(sys.exc_info()[0] + " on line: " + sys.exc_info()[-1].tb_lineno)
+        app.logger.error(str(sys.exc_info()[0]) + " on line: " + str(sys.exc_info()[-1].tb_lineno))
         return "There was an error updating the index. Check the logs"
 
 @app.route('/api/v1/index/file_cases/file_id/<string:file_id>', methods=['PUT'])
 def updateFileCase(file_id):
     try:
         update_statement = generate_index(file_id=file_id)
+        app.logger.debug(update_statement)
         update_file_cases(update_statement)
-        return "ok - updated with file: " + file_id
+        return "ok - updated with file: " + str(file_id)
     except:
-        app.logger.error(sys.exc_info()[0])
+        app.logger.error(str(sys.exc_info()[0]) + " on line: " + str(sys.exc_info()[-1].tb_lineno))
         return "There was an error updating the index. Check the logs"
 
 @app.route('/api/v1/index/file_cases/release_ver/<string:release_ver>', methods=['PUT'])
@@ -39,8 +40,8 @@ def updateFileCaseRelease(release_ver):
         update_file_cases(update_statement)
         return "ok - updated release: " + release_ver
     except:
-        app.logger.error(sys.exc_info()[0])
+        app.logger.error(str(sys.exc_info()[0]) + " on line: " + str(sys.exc_info()[-1].tb_lineno))
         return "There was an error updating the index. Check the logs"
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0')
+    app.run(host='0.0.0.0', debug=False)
