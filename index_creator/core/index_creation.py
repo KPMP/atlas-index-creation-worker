@@ -8,11 +8,16 @@ import logging
 log = logging.getLogger('index-creation-worker.index_creation')
 
 def get_index_update_json(id):
-    return '{"update":{"_index":"file_cases","_id":"' + id + '"}}'
+    return '{"update":{"_index":"file_cases","_id":"' + str(id) + '"}}'
 
 def get_index_doc_json(index_doc):
-    index_doc.cases = index_doc.cases.__dict__
-    return '{"doc":' + json.dumps(index_doc.__dict__) + ',"doc_as_upsert":true}'
+    try:
+        index_doc.cases = index_doc.cases.__dict__
+        json_doc = json.dumps(index_doc.__dict__)
+        doc = '{"doc":' + json_doc + ',"doc_as_upsert":true}'
+    except TypeError as err:
+        log.error(err)
+    return doc
 
 def generate_index(file_id = None, release_ver = None):
     mysql_user = os.environ.get('MYSQL_USER')
@@ -22,16 +27,17 @@ def generate_index(file_id = None, release_ver = None):
         host="mariadb",
         user=mysql_user,
         password=mysql_pwd,
-        database="knowledge_environment"
+        database="knowledge_environment",
+        converter_class=MyConverter
     )
     try:
         mycursor = mydb.cursor(buffered=True, dictionary=True)
 
         where_clause = ""
         if file_id is not None:
-            where_clause = " WHERE f.file_id = '" + file_id + "' "
+            where_clause = " WHERE f.file_id = '" + str(file_id) + "' "
         elif release_ver is not None:
-            where_clause = " WHERE f.release_ver = " + release_ver + " "
+            where_clause = " WHERE f.release_ver = " + str(release_ver) + " "
 
         query = ("SELECT f.*, p.*, m.* FROM file f "  
                   "JOIN file_participant fp on f.file_id = fp.file_id "
@@ -44,7 +50,12 @@ def generate_index(file_id = None, release_ver = None):
 
         update_statement = '';
         for row in mycursor:
-
+            # log.debug('age type: ' + str(type(row['age_binned'])))
+            # log.debug('tissue source type: ' + str(type(row['tissue_source'])))
+            # log.debug('participant id type: ' + str(type(row['participant_id'])))
+            # log.debug('tissue type type: ' + str(type(row['tissue_type'])))
+            # log.debug('sample type type: ' + str(type(row['sample_type'])))
+            # log.debug('sex type: ' + str(type(row['sex'])))
             if row["file_id"] in documents:
                 index_doc = documents[row["file_id"]]
                 # Not adding a new tissue source because we should only have one tissue source per file
@@ -69,3 +80,15 @@ def generate_index(file_id = None, release_ver = None):
     finally:
         mycursor.close()
         mydb.close()
+
+class MyConverter(mysql.connector.conversion.MySQLConverter):
+
+    def row_to_python(self, row, fields):
+        row = super(MyConverter, self).row_to_python(row, fields)
+
+        def to_unicode(col):
+            if isinstance(col, bytearray):
+                return col.decode('utf-8')
+            return col
+
+        return[to_unicode(col) for col in row]
