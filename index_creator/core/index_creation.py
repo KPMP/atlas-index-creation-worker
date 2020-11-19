@@ -47,15 +47,13 @@ def generate_index(file_id = None, release_ver = None):
 
         mycursor.execute(query)
         documents = {}
+        if not mycursor.rowcount:
+            log.error("query returned 0 results. ES index will not be updated")
+            pass
 
         update_statement = '';
         for row in mycursor:
-            # log.debug('age type: ' + str(type(row['age_binned'])))
-            # log.debug('tissue source type: ' + str(type(row['tissue_source'])))
-            # log.debug('participant id type: ' + str(type(row['participant_id'])))
-            # log.debug('tissue type type: ' + str(type(row['tissue_type'])))
-            # log.debug('sample type type: ' + str(type(row['sample_type'])))
-            # log.debug('sex type: ' + str(type(row['sex'])))
+
             if row["file_id"] in documents:
                 index_doc = documents[row["file_id"]]
                 # Not adding a new tissue source because we should only have one tissue source per file
@@ -75,7 +73,7 @@ def generate_index(file_id = None, release_ver = None):
             index_doc
             return update_statement
         except NameError:
-            log.error("No records matched query: " + query);
+            log.error("Unable to process results");
             pass
     finally:
         mycursor.close()
