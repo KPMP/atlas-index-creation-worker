@@ -28,7 +28,7 @@ def generate_updates(mydb, file_id = None, release_ver = None):
 
         where_clause = " WHERE f.release_sunset is NULL ";
         if file_id is not None:
-            where_clause = where_clause + " AND f.file_id = '" + str(file_id) + "' "
+            where_clause = where_clause + " AND f.dl_file_id = '" + str(file_id) + "' "
         elif release_ver is not None:
             where_clause = where_clause + " AND f.release_ver = " + str(release_ver) + " "
 
@@ -47,8 +47,8 @@ def generate_updates(mydb, file_id = None, release_ver = None):
         update_statement = '';
         for row in mycursor:
 
-            if row["file_id"] in documents:
-                index_doc = documents[row["file_id"]]
+            if row["dl_file_id"] in documents:
+                index_doc = documents[row["dl_file_id"]]
                 # Not adding a new tissue source because we should only have one tissue source per file
                 index_doc.cases.samples["participant_id"].append(row['participant_id'])
                 index_doc.cases.samples["sample_type"].append(row['sample_type'])
@@ -61,9 +61,9 @@ def generate_updates(mydb, file_id = None, release_ver = None):
                                                                        "sample_type": [row['sample_type']]},
                                               {"sex": [row['sex']], "age": [row['age_binned']]})
                 index_doc = IndexDoc(row["access"], row["platform"], row["experimental_strategy"], row["data_category"],
-                                     row["workflow_type"], row["data_format"], row["data_type"], row["file_id"],
+                                     row["workflow_type"], row["data_format"], row["data_type"], row["dl_file_id"],
                                      row["file_name"], row["file_size"], row["protocol"], row["package_id"], cases_doc)
-                documents[row["file_id"]] = index_doc
+                documents[row["dl_file_id"]] = index_doc
 
         for id in documents:
             update_statement = update_statement + get_index_update_json(id) + "\n" + get_index_doc_json(
@@ -109,11 +109,11 @@ def generate_deletes(mydb, file_id = None, release_ver = None):
 
     where_clause = " WHERE release_sunset ='" + release_sunset_val + "'";
     if file_id is not None:
-        where_clause = where_clause + " AND file_id = '" + str(file_id) + "' "
+        where_clause = where_clause + " AND dl_file_id = '" + str(file_id) + "' "
 
     try:
         mycursor = mydb.cursor(buffered=True, dictionary=True)
-        query = ("SELECT file_id FROM file" + where_clause)
+        query = ("SELECT dl_file_id FROM file" + where_clause)
         mycursor.execute(query)
 
         if not mycursor.rowcount:
@@ -121,7 +121,7 @@ def generate_deletes(mydb, file_id = None, release_ver = None):
             pass
 
         for row in mycursor:
-            delete_statements = delete_statements + get_index_delete_json(row['file_id']) + "\n";
+            delete_statements = delete_statements + get_index_delete_json(row['dl_file_id']) + "\n";
 
     finally:
         mycursor.close()
