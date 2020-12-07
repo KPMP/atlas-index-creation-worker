@@ -7,6 +7,9 @@ import logging
 
 log = logging.getLogger('index-creation-worker.index_creation')
 
+def get_index_delete_json(id):
+    return '{"delete":{"_index":"file_cases","_id":"' + str(id) + '"}}'
+
 def get_index_update_json(id):
     return '{"update":{"_index":"file_cases","_id":"' + str(id) + '"}}'
 
@@ -19,37 +22,27 @@ def get_index_doc_json(index_doc):
         log.error(err)
     return doc
 
-def generate_index(file_id = None, release_ver = None):
-    mysql_user = os.environ.get('MYSQL_USER')
-    mysql_pwd = os.environ.get('MYSQL_ROOT_PASSWORD')
-
-    mydb = mysql.connector.connect(
-        host="mariadb",
-        user=mysql_user,
-        password=mysql_pwd,
-        database="knowledge_environment",
-        converter_class=MyConverter
-    )
+def generate_updates(mydb, file_id = None, release_ver = None):
     try:
         mycursor = mydb.cursor(buffered=True, dictionary=True)
 
-        where_clause = ""
+        where_clause = " WHERE f.release_sunset is NULL ";
         if file_id is not None:
-            where_clause = " WHERE f.file_id = '" + str(file_id) + "' "
+            where_clause = where_clause + " AND f.file_id = '" + str(file_id) + "' "
         elif release_ver is not None:
-            where_clause = " WHERE f.release_ver = " + str(release_ver) + " "
+            where_clause = where_clause + " AND f.release_ver = " + str(release_ver) + " "
 
-        query = ("SELECT f.*, p.*, m.* FROM file f "  
-                  "JOIN file_participant fp on f.file_id = fp.file_id "
-                  "JOIN participant p on fp.participant_id = p.participant_id "
-                  "JOIN metadata_type m on f.metadata_type_id = m.metadata_type_id " + where_clause +
-                  "order by f.file_id")
+        query = ("SELECT f.*, p.*, m.* FROM file f "
+                 "JOIN file_participant fp on f.file_id = fp.file_id "
+                 "JOIN participant p on fp.participant_id = p.participant_id "
+                 "JOIN metadata_type m on f.metadata_type_id = m.metadata_type_id " + where_clause +
+                 "order by f.file_id")
 
         mycursor.execute(query)
         documents = {}
         if not mycursor.rowcount:
-            log.error("query returned 0 results. ES index will not be updated")
-            pass
+            log.warning("query returned 0 results. No updates to process")
+            return "";
 
         update_statement = '';
         for row in mycursor:
@@ -63,12 +56,18 @@ def generate_index(file_id = None, release_ver = None):
                 index_doc.cases.demographics["age"].append(row['age_binned'])
                 index_doc.cases.demographics["sex"].append(row['sex'])
             else:
-                cases_doc = FileCasesIndexDoc([row['tissue_source']], {"participant_id":[row['participant_id']], "tissue_type":[row['tissue_type']], "sample_type":[row['sample_type']]},{"sex":[row['sex']], "age":[row['age_binned']]})
-                index_doc = IndexDoc(row["access"], row["platform"], row["experimental_strategy"], row["data_category"], row["workflow_type"], row["data_format"], row["data_type"], row["file_id"], row["file_name"], row["file_size"], row["protocol"], row["package_id"], cases_doc)
-                documents[row["file_id"]] =  index_doc
+                cases_doc = FileCasesIndexDoc([row['tissue_source']], {"participant_id": [row['participant_id']],
+                                                                       "tissue_type": [row['tissue_type']],
+                                                                       "sample_type": [row['sample_type']]},
+                                              {"sex": [row['sex']], "age": [row['age_binned']]})
+                index_doc = IndexDoc(row["access"], row["platform"], row["experimental_strategy"], row["data_category"],
+                                     row["workflow_type"], row["data_format"], row["data_type"], row["file_id"],
+                                     row["file_name"], row["file_size"], row["protocol"], row["package_id"], cases_doc)
+                documents[row["file_id"]] = index_doc
 
         for id in documents:
-            update_statement = update_statement + get_index_update_json(id) + "\n" + get_index_doc_json(documents[id]) + "\n"
+            update_statement = update_statement + get_index_update_json(id) + "\n" + get_index_doc_json(
+                documents[id]) + "\n"
         try:
             index_doc
             return update_statement
@@ -77,7 +76,76 @@ def generate_index(file_id = None, release_ver = None):
             pass
     finally:
         mycursor.close()
-        mydb.close()
+
+def get_max_release_ver(mydb):
+    max_release_ver = 0.0;
+    try:
+        mycursor = mydb.cursor(buffered=True, dictionary=True)
+        query = "SELECT MAX(release_ver) AS max FROM file"
+        mycursor.execute(query)
+
+        if not mycursor.rowcount:
+            log.error("Unable to determine latest release version, deletes will not be processed")
+            pass
+        else:
+            record = mycursor.fetchone()
+            max_release_ver = record["max"]
+    finally:
+        mycursor.close()
+
+    return max_release_ver;
+
+def generate_deletes(mydb, file_id = None, release_ver = None):
+    delete_statements = "";
+    release_sunset_val = "";
+    if release_ver is not None:
+        release_sunset_val = release_ver;
+    else:
+        max_release_ver = get_max_release_ver(mydb);
+        if max_release_ver is not None:
+            release_sunset_val = str(max_release_ver);
+        else:
+            raise Exception("Cannot process deletes, index will not be update correctly");
+
+    where_clause = " WHERE release_sunset ='" + release_sunset_val + "'";
+    if file_id is not None:
+        where_clause = where_clause + " AND file_id = '" + str(file_id) + "' "
+
+    try:
+        mycursor = mydb.cursor(buffered=True, dictionary=True)
+        query = ("SELECT file_id FROM file" + where_clause)
+        mycursor.execute(query)
+
+        if not mycursor.rowcount:
+            log.info("0 records found to delete")
+            pass
+
+        for row in mycursor:
+            delete_statements = delete_statements + get_index_delete_json(row['file_id']) + "\n";
+
+    finally:
+        mycursor.close()
+
+    return delete_statements;
+
+def generate_index(file_id = None, release_ver = None):
+    mysql_user = os.environ.get('MYSQL_USER')
+    mysql_pwd = os.environ.get('MYSQL_ROOT_PASSWORD')
+
+    mydb = mysql.connector.connect(
+        host="mariadb",
+        user=mysql_user,
+        password=mysql_pwd,
+        database="knowledge_environment",
+        converter_class=MyConverter
+    )
+    try:
+        es_update_statement = generate_updates(mydb, file_id, release_ver);
+        es_update_statement = es_update_statement + generate_deletes(mydb, file_id, release_ver);
+    finally:
+        mydb.close();
+
+    return es_update_statement;
 
 class MyConverter(mysql.connector.conversion.MySQLConverter):
 
