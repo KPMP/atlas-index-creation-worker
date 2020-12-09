@@ -50,13 +50,13 @@ def generate_updates(mydb, file_id = None, release_ver = None):
             if row["dl_file_id"] in documents:
                 index_doc = documents[row["dl_file_id"]]
                 # Not adding a new tissue source because we should only have one tissue source per file
-                index_doc.cases.samples["participant_id"].append(row['participant_id'])
+                index_doc.cases.samples["participant_id"].append(row['redcap_id'])
                 index_doc.cases.samples["sample_type"].append(row['sample_type'])
                 index_doc.cases.samples["tissue_type"].append(row['tissue_type'])
                 index_doc.cases.demographics["age"].append(row['age_binned'])
                 index_doc.cases.demographics["sex"].append(row['sex'])
             else:
-                cases_doc = FileCasesIndexDoc([row['tissue_source']], {"participant_id": [row['participant_id']],
+                cases_doc = FileCasesIndexDoc([row['tissue_source']], {"participant_id": [row['redcap_id']],
                                                                        "tissue_type": [row['tissue_type']],
                                                                        "sample_type": [row['sample_type']]},
                                               {"sex": [row['sex']], "age": [row['age_binned']]})
@@ -107,7 +107,9 @@ def generate_deletes(mydb, file_id = None, release_ver = None):
         else:
             raise Exception("Cannot process deletes, index will not be update correctly");
 
-    where_clause = " WHERE release_sunset ='" + release_sunset_val + "'";
+    where_clause = " WHERE release_sunset ='" + release_sunset_val + \
+                   "' AND dl_file_id NOT IN (SELECT dl_file_id FROM file " + \
+                   "GROUP BY dl_file_id HAVING count(dl_file_id) > 1 ) ";
     if file_id is not None:
         where_clause = where_clause + " AND dl_file_id = '" + str(file_id) + "' "
 
