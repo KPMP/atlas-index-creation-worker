@@ -32,12 +32,13 @@ def generate_updates(mydb, file_id = None, release_ver = None):
         elif release_ver is not None:
             where_clause = where_clause + " AND f.release_ver = " + str(release_ver) + " "
 
-        query = ("SELECT f.*, p.*, m.* FROM file f "
+        query = ("SELECT f.*, p.*, m.*, d.doi FROM file f "
                  "JOIN file_participant fp on f.file_id = fp.file_id "
                  "JOIN participant p on fp.participant_id = p.participant_id "
+                 "JOIN doi_files fd on f.file_id = fd.file_id "
+                 "JOIN doi d on fd.doi_id = d.id "
                  "JOIN metadata_type m on f.metadata_type_id = m.metadata_type_id " + where_clause +
                  "order by f.file_id")
-
         mycursor.execute(query)
         documents = {}
         if not mycursor.rowcount:
@@ -62,7 +63,7 @@ def generate_updates(mydb, file_id = None, release_ver = None):
                                               {"sex": [row['sex']], "age": [row['age_binned']]})
                 index_doc = IndexDoc(row["access"], row["platform"], row["experimental_strategy"], row["data_category"],
                                      row["workflow_type"], row["data_format"], row["data_type"], row["dl_file_id"],
-                                     row["file_name"], row["file_size"], row["protocol"], row["package_id"], cases_doc)
+                                     row["file_name"], row["file_size"], row["protocol"], row["package_id"], row["doi"], cases_doc)
                 documents[row["dl_file_id"]] = index_doc
 
         for id in documents:

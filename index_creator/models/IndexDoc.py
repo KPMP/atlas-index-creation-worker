@@ -1,5 +1,5 @@
 class IndexDoc:
-    def __init__(self, access, platform, experimental_strategy, data_category, workflow_type, data_format, data_type, file_id, file_name, file_size, protocol, package_id, cases):
+    def __init__(self, access, platform, experimental_strategy, data_category, workflow_type, data_format, data_type, file_id, file_name, file_size, protocol, package_id, dois, cases):
         self.access = access
         self.platform = platform
         self.experimental_strategy = experimental_strategy
@@ -12,4 +12,5 @@ class IndexDoc:
         self.data_type = data_type
         self.protocol = protocol
         self.package_id = package_id
+        self.dois = dois
         self.cases = cases
