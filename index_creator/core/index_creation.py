@@ -32,11 +32,12 @@ def generate_updates(mydb, file_id = None, release_ver = None):
         elif release_ver is not None:
             where_clause = where_clause + " AND f.release_ver = " + str(release_ver) + " "
 
-        query = ("SELECT f.*, p.*, m.*, d.doi FROM file f "
+        query = ("SELECT f.*, p.*, m.*, d.doi, arf.* FROM file f "
                  "JOIN file_participant fp on f.file_id = fp.file_id "
                  "JOIN participant p on fp.participant_id = p.participant_id "
                  "LEFT JOIN doi_files fd on f.file_id = fd.file_id "
                  "LEFT JOIN doi d on fd.doi_id = d.doi_id "
+                 "JOIN ar_file_info arf ON f.file_id = arf.file_id "
                  "JOIN metadata_type m on f.metadata_type_id = m.metadata_type_id " + where_clause +
                  "order by f.file_id")
         mycursor.execute(query)
@@ -135,9 +136,10 @@ def generate_deletes(mydb, file_id = None, release_ver = None):
 def generate_index(file_id = None, release_ver = None):
     mysql_user = os.environ.get('MYSQL_USER')
     mysql_pwd = os.environ.get('MYSQL_ROOT_PASSWORD')
+    mysql_host = os.environ.get('MYSQL_HOST')
 
     mydb = mysql.connector.connect(
-        host="mariadb",
+        host=mysql_host,
         user=mysql_user,
         password=mysql_pwd,
         database="knowledge_environment",
