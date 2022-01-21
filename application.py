@@ -18,7 +18,6 @@ def updateFileCases():
         update_statement = generate_index()
         if update_statement is not None:
             update_file_cases(update_statement)
-            print(update_statement)
             return "ok - updated with all files"
         else:
             app.logger.warn("Index not updated, no results to apply")
