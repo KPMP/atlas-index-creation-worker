@@ -26,11 +26,11 @@ def generate_updates(mydb, file_id = None, release_ver = None):
     try:
         mycursor = mydb.cursor(buffered=True, dictionary=True)
 
-        where_clause = " WHERE f.release_sunset is NULL ";
+        where_clause = " WHERE arf.release_sunset_version is NULL ";
         if file_id is not None:
             where_clause = where_clause + " AND f.dl_file_id = '" + str(file_id) + "' "
         elif release_ver is not None:
-            where_clause = where_clause + " AND f.release_ver = " + str(release_ver) + " "
+            where_clause = where_clause + " AND arf.release_version = " + str(release_ver) + " "
 
         query = ("SELECT f.*, p.*, m.*, d.doi, arf.* FROM file f "
                  "JOIN file_participant fp on f.file_id = fp.file_id "
