@@ -16,6 +16,7 @@ def get_index_update_json(id):
 def get_index_doc_json(index_doc):
     try:
         index_doc.cases = index_doc.cases.__dict__
+        index_doc.dois = list(index_doc.dois)
         json_doc = json.dumps(index_doc.__dict__)
         doc = '{"doc":' + json_doc + ',"doc_as_upsert":true}'
     except TypeError as err:
@@ -57,7 +58,7 @@ def generate_updates(mydb, file_id = None, release_ver = None):
                 index_doc.cases.samples["tissue_type"].append(row['tissue_type'])
                 index_doc.cases.demographics["age"].append(row['age_binned'])
                 index_doc.cases.demographics["sex"].append(row['sex'])
-                index_doc.dois.append(row['doi'])
+                index_doc.dois.add(row['doi'])
             else:
                 cases_doc = FileCasesIndexDoc([row['tissue_source']], {"participant_id": [row['redcap_id']],
                                                                        "tissue_type": [row['tissue_type']],
@@ -65,7 +66,7 @@ def generate_updates(mydb, file_id = None, release_ver = None):
                                               {"sex": [row['sex']], "age": [row['age_binned']]})
                 index_doc = IndexDoc(row["access"], row["platform"], row["experimental_strategy"], row["data_category"],
                                      row["workflow_type"], row["data_format"], row["data_type"], row["dl_file_id"],
-                                     row["file_name"], row["file_size"], row["protocol"], row["package_id"], [row["doi"]], cases_doc)
+                                     row["file_name"], row["file_size"], row["protocol"], row["package_id"], {row["doi"]}, cases_doc)
                 documents[row["dl_file_id"]] = index_doc
 
         for id in documents:
