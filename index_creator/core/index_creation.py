@@ -33,14 +33,18 @@ def generate_updates(mydb, file_id = None, release_ver = None):
         elif release_ver is not None:
             where_clause = where_clause + " AND arf.release_version = " + str(release_ver) + " "
 
-        query = ("SELECT f.*, p.*, m.*, d.doi, arf.* FROM file f "
-                 "JOIN file_participant fp on f.file_id = fp.file_id "
-                 "JOIN participant p on fp.participant_id = p.participant_id "
-                 "LEFT JOIN doi_files fd on f.file_id = fd.file_id "
-                 "LEFT JOIN doi d on fd.doi_id = d.doi_id "
-                 "JOIN ar_file_info arf ON f.file_id = arf.file_id "
-                 "JOIN metadata_type m on f.metadata_type_id = m.metadata_type_id " + where_clause +
-                 "order by f.file_id")
+        query = ("SELECT f.dl_file_id, p.redcap_id, p.sample_type, p.tissue_type, "
+                "p.age_binned, p.sex, d.doi, m.access, m.platform, m.experimental_strategy, "
+                "m.data_category, m.workflow_type, m.data_format, m.data_type, "
+                "f.file_name, f.file_size, p.protocol, f.package_id "
+                "FROM file f JOIN file_participant fp ON f.file_id = fp.file_id "
+                "JOIN participant p ON fp.participant_id = p.participant_id "
+                "LEFT JOIN doi_files fd ON f.file_id = fd.file_id "
+                "LEFT JOIN doi d ON fd.doi_id = d.doi_id "
+                "JOIN ar_file_info arf ON f.file_id = arf.file_id "
+                "JOIN metadata_type m ON f.metadata_type_id = m.metadata_type_id " + where_clause +
+                "ORDER BY f.file_id");
+
         mycursor.execute(query)
         documents = {}
         if not mycursor.rowcount:
@@ -50,6 +54,7 @@ def generate_updates(mydb, file_id = None, release_ver = None):
         update_statement = '';
         for row in mycursor:
 
+            # If we already have a document for this file, add information to it
             if row["dl_file_id"] in documents:
                 index_doc = documents[row["dl_file_id"]]
                 # Not adding a new tissue source because we should only have one tissue source per file
@@ -59,16 +64,19 @@ def generate_updates(mydb, file_id = None, release_ver = None):
                 index_doc.cases.demographics["age"].append(row['age_binned'])
                 index_doc.cases.demographics["sex"].append(row['sex'])
                 index_doc.dois.add(row['doi'])
+            # If this is a new file, then we need to create the initial record and add it to our list of documents
             else:
-                cases_doc = FileCasesIndexDoc([row['tissue_source']], {"participant_id": [row['redcap_id']],
-                                                                       "tissue_type": [row['tissue_type']],
-                                                                       "sample_type": [row['sample_type']]},
-                                              {"sex": [row['sex']], "age": [row['age_binned']]})
+                cases_doc = FileCasesIndexDoc([row['tissue_source']],
+                                              {"participant_id": [row['redcap_id']],
+                                                "tissue_type": [row['tissue_type']],
+                                                "sample_type": [row['sample_type']]},
+                                                {"sex": [row['sex']], "age": [row['age_binned']]})
                 index_doc = IndexDoc(row["access"], row["platform"], row["experimental_strategy"], row["data_category"],
                                      row["workflow_type"], row["data_format"], row["data_type"], row["dl_file_id"],
                                      row["file_name"], row["file_size"], row["protocol"], row["package_id"], {row["doi"]}, cases_doc)
                 documents[row["dl_file_id"]] = index_doc
 
+        # Now that we have all of our documents, create the update statement to run in ES
         for id in documents:
             update_statement = update_statement + get_index_update_json(id) + "\n" + get_index_doc_json(
                 documents[id]) + "\n"

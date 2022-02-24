@@ -3,3 +3,4 @@ elasticsearch==7.9.1
 mysql_connector_repackaged==0.3.1
 mysql-connector==2.2.9
 python-dotenv==0.15.0
+itsdangerous==2.0.1
