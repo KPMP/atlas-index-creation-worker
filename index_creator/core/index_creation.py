@@ -36,7 +36,7 @@ def generate_updates(mydb, file_id = None, release_ver = None):
         query = ("SELECT f.dl_file_id, p.redcap_id, p.sample_type, p.tissue_type, "
                 "p.age_binned, p.sex, d.doi, m.access, m.platform, m.experimental_strategy, "
                 "m.data_category, m.workflow_type, m.data_format, m.data_type, "
-                "f.file_name, f.file_size, p.protocol, f.package_id "
+                "f.file_name, f.file_size, p.protocol, f.package_id, p.tissue_source "
                 "FROM file f JOIN file_participant fp ON f.file_id = fp.file_id "
                 "JOIN participant p ON fp.participant_id = p.participant_id "
                 "LEFT JOIN doi_files fd ON f.file_id = fd.file_id "
@@ -61,19 +61,22 @@ def generate_updates(mydb, file_id = None, release_ver = None):
                 index_doc.cases.samples["participant_id"].append(row['redcap_id'])
                 index_doc.cases.samples["sample_type"].append(row['sample_type'])
                 index_doc.cases.samples["tissue_type"].append(row['tissue_type'])
+                index_doc.cases.samples["protocol"].append(row['protocol'])
                 index_doc.cases.demographics["age"].append(row['age_binned'])
                 index_doc.cases.demographics["sex"].append(row['sex'])
+                index_doc.cases.tissue_source.append(row['tissue_source'])
                 index_doc.dois.add(row['doi'])
             # If this is a new file, then we need to create the initial record and add it to our list of documents
             else:
                 cases_doc = FileCasesIndexDoc([row['tissue_source']],
                                               {"participant_id": [row['redcap_id']],
                                                 "tissue_type": [row['tissue_type']],
-                                                "sample_type": [row['sample_type']]},
+                                                "sample_type": [row['sample_type']],
+                                                "protocol": [row['protocol']]},
                                                 {"sex": [row['sex']], "age": [row['age_binned']]})
                 index_doc = IndexDoc(row["access"], row["platform"], row["experimental_strategy"], row["data_category"],
                                      row["workflow_type"], row["data_format"], row["data_type"], row["dl_file_id"],
-                                     row["file_name"], row["file_size"], row["protocol"], row["package_id"], {row["doi"]}, cases_doc)
+                                     row["file_name"], row["file_size"], row["package_id"], {row["doi"]}, cases_doc)
                 documents[row["dl_file_id"]] = index_doc
 
         # Now that we have all of our documents, create the update statement to run in ES

@@ -22,7 +22,8 @@ def updateFileCases():
         else:
             app.logger.warn("Index not updated, no results to apply")
             return "Index not updated, no results to apply"
-    except:
+    except Exception as e:
+        app.logger.error(e)
         app.logger.error(str(sys.exc_info()[0]) + " on line: " + str(sys.exc_info()[-1].tb_lineno))
         return "There was an error updating the index. Check the logs"
 
@@ -36,7 +37,8 @@ def updateFileCase(file_id):
         else:
             app.logger.warn("Index not updated, no results to apply")
             return "Index not updated, no results to apply"
-    except:
+    except Exception as e:
+        app.logger.error(e)
         app.logger.error(str(sys.exc_info()[0]) + " on line: " + str(sys.exc_info()[-1].tb_lineno))
         return "There was an error updating the index. Check the logs"
 
@@ -50,7 +52,8 @@ def updateFileCaseRelease(release_ver):
         else:
             app.logger.warn("Index not updated, no results to apply")
             return "Index not updated, no results to apply"
-    except:
+    except Exception as e:
+        app.logger.error(e)
         app.logger.error(str(sys.exc_info()[0]) + " on line: " + str(sys.exc_info()[-1].tb_lineno))
         return "There was an error updating the index. Check the logs"
 
