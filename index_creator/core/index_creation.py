@@ -42,7 +42,7 @@ def generate_updates(mydb, file_id = None, release_ver = None):
                 "LEFT JOIN doi_files fd ON f.file_id = fd.file_id "
                 "LEFT JOIN doi d ON fd.doi_id = d.doi_id "
                 "JOIN ar_file_info arf ON f.file_id = arf.file_id "
-                "JOIN metadata_type m ON f.metadata_type_id = m.metadata_type_id " + where_clause +
+                "JOIN metadata_type m ON arf.metadata_type_id = m.metadata_type_id " + where_clause +
                 "ORDER BY f.file_id");
 
         mycursor.execute(query)
