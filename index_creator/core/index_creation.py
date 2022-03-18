@@ -122,7 +122,7 @@ def generate_deletes(mydb, file_id = None, release_ver = None):
         else:
             raise Exception("Cannot process deletes, index will not be update correctly");
 
-    where_clause = " WHERE release_sunset ='" + release_sunset_val + \
+    where_clause = " WHERE arf.release_sunset_version ='" + release_sunset_val + \
                    "' AND dl_file_id NOT IN (SELECT dl_file_id FROM file " + \
                    "GROUP BY dl_file_id HAVING count(dl_file_id) > 1 ) ";
     if file_id is not None:
@@ -130,7 +130,7 @@ def generate_deletes(mydb, file_id = None, release_ver = None):
 
     try:
         mycursor = mydb.cursor(buffered=True, dictionary=True)
-        query = ("SELECT dl_file_id FROM file" + where_clause)
+        query = ("SELECT dl_file_id FROM file f JOIN ar_file_info arf ON f.file_id = arf.file_id " + where_clause)
         mycursor.execute(query)
 
         if not mycursor.rowcount:
