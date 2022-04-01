@@ -96,7 +96,7 @@ def get_max_release_ver(mydb):
     max_release_ver = 0.0;
     try:
         mycursor = mydb.cursor(buffered=True, dictionary=True)
-        query = "SELECT MAX(release_ver) AS max FROM file"
+        query = "SELECT MAX(release_version) AS max FROM ar_file_info"
         mycursor.execute(query)
 
         if not mycursor.rowcount:
