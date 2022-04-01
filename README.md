@@ -11,3 +11,7 @@ http://localhost:5001/api/v1/index/file_cases/file_id/<file uuid>
 Regenerate a given release:
 http://localhost:5001/api/v1/index/file_cases/release_ver/<release version>
 
+
+# Index Mapping
+
+The index mapping file, containing the field/type relationships, are located within the knowledge-environment repository.
