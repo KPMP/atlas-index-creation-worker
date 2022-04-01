@@ -13,7 +13,7 @@ http://localhost:5001/api/v1/index/file_cases/release_ver/<release version>
 
 
 ## Useful ES calls
-This is a small subset of the entire API available for use. You may execute these restful quries as curl commands or through the kibana dev-tools panel. The following examples will assume the dev-tool panel is being used.
+This is a small subset of the entire API available for use. You may execute these restful queries as curl commands or through the kibana dev-tools panel. The following examples will assume the dev-tool panel is being used.
   
 ### Show List of Index
 `GET _cat/indices/%2A?v=`
@@ -65,14 +65,14 @@ PUT /file_cases?pretty
 
 ## How to update the index
 
-Elastic search does not allow an index to be updated, this presents a challenge when the underlying model requires an update. For example, the transformation of a field from one type to another. The following is an example on how to update a field, field_size, from type keyword to type long.
+Elastic search does not allow an index to be updated, and this presents a challenge when the underlying model requires an update—For example, the transformation of a field from one type to another. The following is an example on updating a field, field_size, from type keyword to type long.
 
 0. Before starting this process, ensure you have up-to-date backups in case something goes wrong.
   
 1. Modify the existing index mapping
   `"file_name": { "type": "keyword" } =>  "file_name": { "type": "long" }`
   
-2. Create a new index using the updated mapping, note this must be a unique name. For our example, we are adding _temp to the name so that file_cases becauses file_cases_temp.
+2. Create a new index using the updated mapping. Note that this index must be a unique name. For our example, we are adding _temp to the name so that file_cases becomes file_cases_temp.
   
   ```
   PUT /file_cases_temp?pretty
@@ -122,13 +122,13 @@ POST _reindex
 
 10. Choose the project you're working on and make any required edits. In our example, we need to choose `endpoint` -> `File` -> and then update the DOI field to use `isArray`
     
-11. We must create a temporary project to swap it with our current project, much in the same way we needed to do with the index itself. Arranger has some quirks, as such it is best to name your temporary project with something like `123temp`
+11. We must create a temporary project to swap it with our current project, like we needed to do with the index itself. Arranger has some quirks, as such, it is best to name your temporary project with something like `123temp`
     
 12. Delete your current project
     
-13. Save your temporary project, creating a new project in process, with the name of your initial project.
+13. Save your temporary project, creating a new project in the process with the name of your initial project.
     
 14. Delete your temporary project.
   
-15. We now neeed to restart the knowledge-environment to see the changes
+15. We now need to restart the knowledge-environment to see the changes
 `docker-compose -f docker-compose.prod.yml down && docker-compose -f docker-compose.prod.yml up -d`
