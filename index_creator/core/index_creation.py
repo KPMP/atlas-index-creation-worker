@@ -16,6 +16,7 @@ def get_index_update_json(id):
 def get_index_doc_json(index_doc):
     try:
         index_doc.cases = index_doc.cases.__dict__
+        index_doc.dois = list(index_doc.dois)
         json_doc = json.dumps(index_doc.__dict__)
         doc = '{"doc":' + json_doc + ',"doc_as_upsert":true}'
     except TypeError as err:
@@ -26,17 +27,23 @@ def generate_updates(mydb, file_id = None, release_ver = None):
     try:
         mycursor = mydb.cursor(buffered=True, dictionary=True)
 
-        where_clause = " WHERE f.release_sunset is NULL ";
+        where_clause = " WHERE arf.release_sunset_version is NULL ";
         if file_id is not None:
             where_clause = where_clause + " AND f.dl_file_id = '" + str(file_id) + "' "
         elif release_ver is not None:
-            where_clause = where_clause + " AND f.release_ver = " + str(release_ver) + " "
+            where_clause = where_clause + " AND arf.release_version = " + str(release_ver) + " "
 
-        query = ("SELECT f.*, p.*, m.* FROM file f "
-                 "JOIN file_participant fp on f.file_id = fp.file_id "
-                 "JOIN participant p on fp.participant_id = p.participant_id "
-                 "JOIN metadata_type m on f.metadata_type_id = m.metadata_type_id " + where_clause +
-                 "order by f.file_id")
+        query = ("SELECT f.dl_file_id, p.redcap_id, p.sample_type, p.tissue_type, "
+                "p.age_binned, p.sex, d.doi, m.access, m.platform, m.experimental_strategy, "
+                "m.data_category, m.workflow_type, m.data_format, m.data_type, "
+                "f.file_name, f.file_size, p.protocol, f.package_id, p.tissue_source "
+                "FROM file f JOIN file_participant fp ON f.file_id = fp.file_id "
+                "JOIN participant p ON fp.participant_id = p.participant_id "
+                "LEFT JOIN doi_files fd ON f.file_id = fd.file_id "
+                "LEFT JOIN doi d ON fd.doi_id = d.doi_id "
+                "JOIN ar_file_info arf ON f.file_id = arf.file_id "
+                "JOIN metadata_type m ON f.metadata_type_id = m.metadata_type_id " + where_clause +
+                "ORDER BY f.file_id");
 
         mycursor.execute(query)
         documents = {}
@@ -47,24 +54,32 @@ def generate_updates(mydb, file_id = None, release_ver = None):
         update_statement = '';
         for row in mycursor:
 
+            # If we already have a document for this file, add information to it
             if row["dl_file_id"] in documents:
                 index_doc = documents[row["dl_file_id"]]
                 # Not adding a new tissue source because we should only have one tissue source per file
                 index_doc.cases.samples["participant_id"].append(row['redcap_id'])
                 index_doc.cases.samples["sample_type"].append(row['sample_type'])
                 index_doc.cases.samples["tissue_type"].append(row['tissue_type'])
+                index_doc.cases.samples["protocol"].append(row['protocol'])
                 index_doc.cases.demographics["age"].append(row['age_binned'])
                 index_doc.cases.demographics["sex"].append(row['sex'])
+                index_doc.cases.tissue_source.append(row['tissue_source'])
+                index_doc.dois.add(row['doi'])
+            # If this is a new file, then we need to create the initial record and add it to our list of documents
             else:
-                cases_doc = FileCasesIndexDoc([row['tissue_source']], {"participant_id": [row['redcap_id']],
-                                                                       "tissue_type": [row['tissue_type']],
-                                                                       "sample_type": [row['sample_type']]},
-                                              {"sex": [row['sex']], "age": [row['age_binned']]})
+                cases_doc = FileCasesIndexDoc([row['tissue_source']],
+                                              {"participant_id": [row['redcap_id']],
+                                                "tissue_type": [row['tissue_type']],
+                                                "sample_type": [row['sample_type']],
+                                                "protocol": [row['protocol']]},
+                                                {"sex": [row['sex']], "age": [row['age_binned']]})
                 index_doc = IndexDoc(row["access"], row["platform"], row["experimental_strategy"], row["data_category"],
                                      row["workflow_type"], row["data_format"], row["data_type"], row["dl_file_id"],
-                                     row["file_name"], row["file_size"], row["protocol"], row["package_id"], cases_doc)
+                                     row["file_name"], row["file_size"], row["package_id"], {row["doi"]}, cases_doc)
                 documents[row["dl_file_id"]] = index_doc
 
+        # Now that we have all of our documents, create the update statement to run in ES
         for id in documents:
             update_statement = update_statement + get_index_update_json(id) + "\n" + get_index_doc_json(
                 documents[id]) + "\n"
@@ -133,9 +148,10 @@ def generate_deletes(mydb, file_id = None, release_ver = None):
 def generate_index(file_id = None, release_ver = None):
     mysql_user = os.environ.get('MYSQL_USER')
     mysql_pwd = os.environ.get('MYSQL_ROOT_PASSWORD')
+    mysql_host = os.environ.get('MYSQL_HOST')
 
     mydb = mysql.connector.connect(
-        host="mariadb",
+        host=mysql_host,
         user=mysql_user,
         password=mysql_pwd,
         database="knowledge_environment",
