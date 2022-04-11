@@ -42,7 +42,7 @@ def generate_updates(mydb, file_id = None, release_ver = None):
                 "LEFT JOIN doi_files fd ON f.file_id = fd.file_id "
                 "LEFT JOIN doi d ON fd.doi_id = d.doi_id "
                 "JOIN ar_file_info arf ON f.file_id = arf.file_id "
-                "JOIN metadata_type m ON f.metadata_type_id = m.metadata_type_id " + where_clause +
+                "JOIN metadata_type m ON arf.metadata_type_id = m.metadata_type_id " + where_clause +
                 "ORDER BY f.file_id");
 
         mycursor.execute(query)
@@ -96,7 +96,7 @@ def get_max_release_ver(mydb):
     max_release_ver = 0.0;
     try:
         mycursor = mydb.cursor(buffered=True, dictionary=True)
-        query = "SELECT MAX(release_ver) AS max FROM file"
+        query = "SELECT MAX(release_version) AS max FROM ar_file_info"
         mycursor.execute(query)
 
         if not mycursor.rowcount:
@@ -122,7 +122,7 @@ def generate_deletes(mydb, file_id = None, release_ver = None):
         else:
             raise Exception("Cannot process deletes, index will not be update correctly");
 
-    where_clause = " WHERE release_sunset ='" + release_sunset_val + \
+    where_clause = " WHERE arf.release_sunset_version ='" + release_sunset_val + \
                    "' AND dl_file_id NOT IN (SELECT dl_file_id FROM file " + \
                    "GROUP BY dl_file_id HAVING count(dl_file_id) > 1 ) ";
     if file_id is not None:
@@ -130,7 +130,7 @@ def generate_deletes(mydb, file_id = None, release_ver = None):
 
     try:
         mycursor = mydb.cursor(buffered=True, dictionary=True)
-        query = ("SELECT dl_file_id FROM file" + where_clause)
+        query = ("SELECT dl_file_id FROM file f JOIN ar_file_info arf ON f.file_id = arf.file_id " + where_clause)
         mycursor.execute(query)
 
         if not mycursor.rowcount:
