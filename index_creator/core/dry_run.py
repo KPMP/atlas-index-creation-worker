@@ -39,10 +39,10 @@ def generate_updates(mydb, file_id = None, release_ver = None):
                 "ORDER BY f.file_id");
 
         mycursor.execute(query)
-        header = [row[0] for row in mycursor.description]
+        # header = [row[0] for row in mycursor.description]
         rows = mycursor.fetchall()
-        f = open("./ke_dump","w")
-        f.write(",".join(header) + '\n')
+        f = open("./ke_dump.csv","w")
+        # f.write(",".join(header) + '\n')
         
         for row in rows:
             f.write(",".join(str(r) for r in row) + "\n")
