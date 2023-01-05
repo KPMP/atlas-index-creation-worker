@@ -1,5 +1,7 @@
 import mysql.connector
 import os
+import csv
+import sys
 def generate_index(file_id = None, release_ver = None):
     mysql_user = os.environ.get('MYSQL_USER')
     mysql_pwd = os.environ.get('MYSQL_ROOT_PASSWORD')
@@ -39,17 +41,29 @@ def generate_updates(mydb, file_id = None, release_ver = None):
                 "ORDER BY f.file_id");
 
         mycursor.execute(query)
-        # header = [row[0] for row in mycursor.description]
+        csv_file_path = './ke_dump.csv'
         rows = mycursor.fetchall()
-        f = open("./ke_dump.csv","w")
-        # f.write(",".join(header) + '\n')
-        
-        for row in rows:
-            f.write(",".join(str(r) for r in row) + "\n")
-        f.close()
-        print(str(len(rows)) + " rows written successfully to " + f.name)
   finally:
     mydb.close()
+
+  if rows:
+      result = list()
+      column_names = list()
+      
+      for i in mycursor.description:
+          column_names.append(i[0])
+          
+      result.append(column_names)
+      for row in rows:
+          result.append(row)
+          
+      with open(csv_file_path, 'w', newline='') as csvfile:
+          csvwriter = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+          for row in result:
+              csvwriter.writerow(row)
+  else:
+      sys.exit("No rows found for query")
+  
 
 if __name__ == "__main__":
     generate_index()
