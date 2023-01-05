@@ -41,7 +41,7 @@ def generate_updates(mydb, file_id = None, release_ver = None):
         mycursor.execute(query)
         header = [row[0] for row in mycursor.description]
         rows = mycursor.fetchall()
-        f = open("ke_dump", +".csv", "w")
+        f = open("./ke_dump","w")
         f.write(",".join(header) + '\n')
         
         for row in rows:
