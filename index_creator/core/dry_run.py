@@ -50,3 +50,6 @@ def generate_updates(mydb, file_id = None, release_ver = None):
         print(str(len(rows)) + " rows written successfully to " + f.name)
   finally:
     mydb.close()
+
+if __name__ == "__main__":
+    generate_index()
