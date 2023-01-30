@@ -37,6 +37,7 @@ def generate_updates(mydb, file_id = None, release_ver = None):
                 "LEFT JOIN doi_files fd ON f.file_id = fd.file_id "
                 "LEFT JOIN doi d ON fd.doi_id = d.doi_id "
                 "JOIN ar_file_info arf ON f.file_id = arf.file_id "
+                "JOIN ar_file_info arf ON f.release_version = arf.release_version "
                 "JOIN metadata_type m ON arf.metadata_type_id = m.metadata_type_id " + where_clause +
                 "ORDER BY f.file_id", mydb);
 
