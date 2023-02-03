@@ -1,4 +1,4 @@
-FROM python:3.11.0a3-alpine3.15
+FROM nickgryg/alpine-pandas:latest
 WORKDIR /project
 ADD . /project
 RUN apk add --no-cache tzdata
