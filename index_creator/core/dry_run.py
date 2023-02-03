@@ -43,12 +43,11 @@ def generate_updates(mydb, file_id = None, release_ver = None):
         df.to_csv(csv_file_path, index=False)
         df = pd.read_csv(csv_file_path)
         version = 0
-        while version < 4:
+        while version < 3:
             version += 1
-            query = pd.read_sql_query("SELECT COUNT(*) FROM file f JOIN ar_file_info afi ON f.file_id = afi.file_id WHERE release_version= " + version, mydb)
-            df["version " + version + " count"] = query
+            query = pd.read_sql_query("SELECT COUNT(*) FROM file f JOIN ar_file_info afi ON f.file_id = afi.file_id WHERE release_version= " + str(version), mydb)
+            df["version " + str(version) + " count"] = query
             df.to_csv(csv_file_path, index=False)
-        
         
   finally:
     mydb.close()
