@@ -1,5 +1,6 @@
 import mysql.connector
 import os
+import csv
 import pandas as pd
 import sys
 import getopt
@@ -74,4 +75,4 @@ def generate_updates(mydb, file_id = None, release_ver = None):
   finally:
     mydb.close()
 if __name__ == "__main__":
-    input_version_number()
+    input_version_number(sys.argv)
