@@ -1,7 +1,29 @@
 import mysql.connector
 import os
-import csv
 import pandas as pd
+import sys
+import getopt
+def input_version_number(argv):
+    arg_ver = ""
+    arg_help = "{0} -v <version>".format(argv[0])
+    
+    try:
+        opts, args = getopt.getopt(argv[1:], "h:v:", ["help", "version="])
+    except:
+        print(arg_help)
+        sys.exit(2)
+    
+    for opt, arg in opts:
+        if opt in ("-h", "--help"):
+            print(arg_help)  # print the help message
+            sys.exit(2)
+        elif opt in ("-v", "--version"):
+            arg_ver = arg
+    if arg_ver == "":
+      generate_index()
+      
+    else:
+      generate_index(None, arg_ver)
 def generate_index(file_id = None, release_ver = None):
     mysql_user = os.environ.get('MYSQL_USER')
     mysql_pwd = os.environ.get('MYSQL_ROOT_PASSWORD')
@@ -36,20 +58,20 @@ def generate_updates(mydb, file_id = None, release_ver = None):
                 "LEFT JOIN doi d ON fd.doi_id = d.doi_id "
                 "JOIN ar_file_info arf ON f.file_id = arf.file_id "
                 "JOIN metadata_type m ON arf.metadata_type_id = m.metadata_type_id " + where_clause +
-                "ORDER BY f.file_id", mydb);
+                "ORDER BY f.file_id", mydb)
 
         csv_file_path = './ke_dump.csv'
-        df = pd.DataFrame(query)
-        df.to_csv(csv_file_path, index=False)
-        df = pd.read_csv(csv_file_path)
-        version = 0
-        while version < 3:
-            version += 1
-            query = pd.read_sql_query("SELECT COUNT(*) FROM file f JOIN ar_file_info afi ON f.file_id = afi.file_id WHERE release_version= " + str(version), mydb)
-            df["version " + str(version) + " count"] = query
-            df.to_csv(csv_file_path, index=False)
+        df1 = pd.DataFrame(query)
+        
+        if release_ver is not None:
+            query = pd.read_sql_query("SELECT afi.release_version, COUNT(f.file_id) as file_count FROM file f JOIN ar_file_info afi ON f.file_id = afi.file_id WHERE afi.release_version = " + release_ver, mydb)
+        else:
+            query = pd.read_sql_query("SELECT afi.release_version, COUNT(f.file_id) as file_count FROM file f JOIN ar_file_info afi ON f.file_id = afi.file_id GROUP BY afi.release_version", mydb)
+        df2 = pd.DataFrame(query)
+        df3 = pd.concat([df1, df2], axis=1)
+        df3.to_csv(csv_file_path, index=False)
         
   finally:
     mydb.close()
 if __name__ == "__main__":
-    generate_index()
+    input_version_number()
