@@ -135,7 +135,7 @@ POST _reindex
 
 ## How to generate a dump index
 
-This will pull data from the knowledge-environment to check what data is available. This will only mae a GET request to the knowledge-environment to get the number of files associated with a version number.
+This will pull data from the knowledge-environment to check what data is available. This will only make a GET request to the knowledge-environment to get the number of files associated with a version number.
 
 1. Pull the image from dockerhub. `docker pull kingstonduo/atlas-index-creation-worker:1.5`
 
@@ -143,7 +143,7 @@ This will pull data from the knowledge-environment to check what data is availab
 
 3. Enter the docker container. `docker exec -it index-creation-worker sh`
 
-4. Enter the directory where dry_run.py is located. `cd index_creator/core`
+4. Enter the directory where `dry_run.py` is located. `cd index_creator/core`
 
 5. If you want use get files for a specific version. `python3 dry_run.py -v <version>` Replace `<version>` with the version number of your choice.
 
