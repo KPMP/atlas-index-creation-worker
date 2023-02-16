@@ -132,3 +132,27 @@ POST _reindex
   
 15. We now need to restart the knowledge-environment to see the changes
 `docker-compose -f docker-compose.prod.yml down && docker-compose -f docker-compose.prod.yml up -d`
+
+## How to generate a dump index
+
+This will pull data from the knowledge-environment to check what data is available. This will only mae a GET request to the knowledge-environment to get the number of files associated with a version number.
+
+1. Pull the image from dockerhub. `docker pull kingstonduo/atlas-index-creation-worker:1.5`
+
+2. Run the image from the heavens docker repository. `cd heavens-docker/atlas/knowledge-environment/ && docker-compose -f docker-compose.index-creation-worker.yml up -d`
+
+3. Enter the docker container. `docker exec -it index-creation-worker sh`
+
+4. Enter the directory where dry_run.py is located. `cd index_creator/core`
+
+5. If you want use get files for a specific version. `python3 dry_run.py -v <version>` Replace `<version>` with the version number of your choice.
+
+6. If you want to get all files regardless of version. `python3 dry_run.py`
+
+7. This will generate `ke_dump.csv` inside of the docker container. To get the csv outside of the container you will need to copy `ke_dump.csv` to the host machine, and then copy to your local machine for viewing inside of excel or google sheets. 
+
+8. To copy `ke_dump.csv` to the host machine. Exit the container. `docker cp index-creation-worker:/project/index_creator/core/ke_dump /path/to/copy/to`. Take note of `/path/to/copy/to`. We will use this in the next step.
+
+9. To copy `ke_dump.csv` to your local machine. Exit the host machine and secure copy the file to your local machine. `scp -i /path/to/identityFile user@HostName:/path/to/copy/to /path/to/local/machine`
+
+10. You know have `ke_dump.csv` save to your local machine.
