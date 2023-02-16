@@ -155,4 +155,4 @@ This will pull data from the knowledge-environment to check what data is availab
 
 9. To copy `ke_dump.csv` to your local machine. Exit the host machine and secure copy the file to your local machine. `scp -i /path/to/identityFile user@HostName:/path/to/copy/to /path/to/local/machine`
 
-10. You know have `ke_dump.csv` save to your local machine.
+10. You now have `ke_dump.csv` save to your local machine.
