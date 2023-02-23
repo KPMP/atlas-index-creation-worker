@@ -12,7 +12,7 @@ handler.setFormatter(logging.Formatter(
 app.logger.addHandler(handler)
 app.logger.setLevel(logging.DEBUG)
 
-@app.route('/api/v1/index/file_cases', methods=['PUT'])
+@app.route('/api/v1/index/file_cases', methods=['POST']) #the POST method is was elasticSearch's _bulk() API expects
 def updateFileCases():
     try:
         update_statement = generate_index()
