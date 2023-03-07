@@ -25,13 +25,15 @@ def get_index_doc_json(index_doc):
 
 def generate_updates(mydb, file_id = None, release_ver = None):
     try:
+        values = ()
         mycursor = mydb.cursor(buffered=True, dictionary=True)
 
         where_clause = " WHERE arf.release_sunset_version is NULL ";
         if file_id is not None:
             where_clause = where_clause + " AND f.dl_file_id = '" + str(file_id) + "' "
         elif release_ver is not None:
-            where_clause = where_clause + " AND arf.release_version = " + str(release_ver) + " "
+            where_clause = where_clause + " AND arf.release_version = CAST(%s AS DECIMAL) "
+            values = (str(release_ver),)
 
         query = ("SELECT f.dl_file_id, p.redcap_id, p.sample_type, p.tissue_type, "
                 "p.age_binned, p.sex, d.doi, m.access, m.platform, m.experimental_strategy, "
@@ -44,8 +46,7 @@ def generate_updates(mydb, file_id = None, release_ver = None):
                 "JOIN ar_file_info arf ON f.file_id = arf.file_id "
                 "JOIN metadata_type m ON arf.metadata_type_id = m.metadata_type_id " + where_clause +
                 "ORDER BY f.file_id");
-
-        mycursor.execute(query)
+        mycursor.execute(query, values)
         documents = {}
         if not mycursor.rowcount:
             log.warning("query returned 0 results. No updates to process")
@@ -114,7 +115,7 @@ def generate_deletes(mydb, file_id = None, release_ver = None):
     delete_statements = "";
     release_sunset_val = "";
     if release_ver is not None:
-        release_sunset_val = release_ver;
+        release_sunset_val = str(release_ver);
     else:
         max_release_ver = get_max_release_ver(mydb);
         if max_release_ver is not None:
@@ -122,8 +123,7 @@ def generate_deletes(mydb, file_id = None, release_ver = None):
         else:
             raise Exception("Cannot process deletes, index will not be update correctly");
 
-    where_clause = " WHERE arf.release_sunset_version ='" + release_sunset_val + \
-                   "' AND dl_file_id NOT IN (SELECT dl_file_id FROM file " + \
+    where_clause = " WHERE arf.release_sunset_version = CAST(%s AS DECIMAL) AND dl_file_id NOT IN (SELECT dl_file_id FROM file " + \
                    "GROUP BY dl_file_id HAVING count(dl_file_id) > 1 ) ";
     if file_id is not None:
         where_clause = where_clause + " AND dl_file_id = '" + str(file_id) + "' "
@@ -131,7 +131,7 @@ def generate_deletes(mydb, file_id = None, release_ver = None):
     try:
         mycursor = mydb.cursor(buffered=True, dictionary=True)
         query = ("SELECT dl_file_id FROM file f JOIN ar_file_info arf ON f.file_id = arf.file_id " + where_clause)
-        mycursor.execute(query)
+        mycursor.execute(query, (release_sunset_val,))
 
         if not mycursor.rowcount:
             log.info("0 records found to delete")

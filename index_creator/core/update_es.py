@@ -5,6 +5,7 @@ log = logging.getLogger('index-creation-worker.update_file_cases')
 
 def update_file_cases(update_statement):
     try:
+        print("Update statement in update_es.py=", update_statement)
         elastic = Elasticsearch(['elasticsearch'])
         elastic.bulk(update_statement)
     except ConnectionError as connectionError:
