@@ -32,7 +32,7 @@ def generate_updates(mydb, file_id = None, release_ver = None):
         if file_id is not None:
             where_clause = where_clause + " AND f.dl_file_id = '" + str(file_id) + "' "
         elif release_ver is not None:
-            where_clause = where_clause + " AND arf.release_version = CAST(%s AS DECIMAL) "
+            where_clause = where_clause + " AND arf.release_version = CAST(%s AS FLOAT) "
             values = (str(release_ver),)
 
         query = ("SELECT f.dl_file_id, p.redcap_id, p.sample_type, p.tissue_type, "
