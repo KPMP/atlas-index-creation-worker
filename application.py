@@ -42,7 +42,7 @@ def updateFileCase(file_id):
         app.logger.error(str(sys.exc_info()[0]) + " on line: " + str(sys.exc_info()[-1].tb_lineno))
         return "There was an error updating the index. Check the logs"
 
-@app.route('/api/v1/index/file_cases/release_ver/<float:release_ver>', methods=['PUT', 'GET'])
+@app.route('/api/v1/index/file_cases/release_ver/<string:release_ver>', methods=['PUT', 'GET'])
 def updateFileCaseRelease(release_ver):
     try:
         release_ver = float(release_ver)
