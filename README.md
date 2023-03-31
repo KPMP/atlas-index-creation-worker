@@ -137,11 +137,13 @@ POST _reindex
 
 This will pull data from the knowledge-environment to check what data is available. This will only make a GET request to the knowledge-environment to get the number of files associated with a version number.
 
-1. Tunnel to the knowledge-envrionment machine and set port as 3306
+This script will not work properly inside of the container. In some columns there will be a `bytearray(b"<cell contents>")` surrounding the content of the cell. 
+
+1. Tunnel to the knowledge-environment machine and set port as 3306
 
 2. On your local machine, copy the .env_example and rename to .env
 
-3. Edit the .env and change the values to the correct user, and passoword
+3. Edit the .env and change the values to the correct user, and password
 
 4. Change the .env host variable to 127.0.0.1
 
