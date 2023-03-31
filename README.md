@@ -137,22 +137,18 @@ POST _reindex
 
 This will pull data from the knowledge-environment to check what data is available. This will only make a GET request to the knowledge-environment to get the number of files associated with a version number.
 
-1. Pull the image from dockerhub. `docker pull kingstonduo/atlas-index-creation-worker:1.5`
+This script will not work properly inside of the container. In some columns there will be a `bytearray(b"<cell contents>")` surrounding the content of the cell. 
 
-2. Run the image from the heavens docker repository. `cd heavens-docker/atlas/knowledge-environment/ && docker-compose -f docker-compose.index-creation-worker.yml up -d`
+1. Tunnel to the knowledge-environment machine and set port as 3306
 
-3. Enter the docker container. `docker exec -it index-creation-worker sh`
+2. On your local machine, copy the .env_example and rename to .env
 
-4. Enter the directory where `dry_run.py` is located. `cd index_creator/core`
+3. Edit the .env and change the values to the correct user, and password
 
-5. If you want use get files for a specific version. `python3 dry_run.py -v <version>` Replace `<version>` with the version number of your choice.
+4. Change the .env host variable to 127.0.0.1
 
-6. If you want to get all files regardless of version. `python3 dry_run.py`
+5. Run the `dry_run.py` script
 
-7. This will generate `ke_dump.csv` inside of the docker container. To get the csv outside of the container you will need to copy `ke_dump.csv` to the host machine, and then copy to your local machine for viewing inside of excel or google sheets. 
+6. If you want files for a specific version. `python3 dry_run.py -v <version>` Replace `<version>` with the version number of your choice.
 
-8. To copy `ke_dump.csv` to the host machine. Exit the container. `docker cp index-creation-worker:/project/index_creator/core/ke_dump /path/to/copy/to`. Take note of `/path/to/copy/to`. We will use this in the next step.
-
-9. To copy `ke_dump.csv` to your local machine. Exit the host machine and secure copy the file to your local machine. `scp -i /path/to/identityFile user@HostName:/path/to/copy/to /path/to/local/machine`
-
-10. You now have `ke_dump.csv` save to your local machine.
+7. If you want to get all files regardless of version. `python3 dry_run.py`
