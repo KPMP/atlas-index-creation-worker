@@ -1,6 +1,7 @@
 import flask
 import sys
 from index_creator.core.index_creation import generate_index
+from index_creator.core.index_creation import generate_repo_index
 from index_creator.core.update_es import update_file_cases
 import logging
 
@@ -57,6 +58,20 @@ def updateFileCaseRelease(release_ver):
         app.logger.error(e)
         app.logger.error(str(sys.exc_info()[0]) + " on line: " + str(sys.exc_info()[-1].tb_lineno))
         return "There was an error updating the index. Check the logs"
+
+@app.route('/api/v1/index/repository_index', methods=['GET'])
+def generateEnterpriseSerchIndex():
+    try:
+        update_statement = generate_repo_index()
+        if update_statement is not None:
+            return update_statement
+        else:
+            app.logger.warn("Unable to generate new index")
+            return "Unable to generate new index"
+    except Exception as e:
+        app.logger.error(e)
+        app.logger.error(str(sys.exc_info()[0]) + " on line: " + str(sys.exc_info()[-1].tb_lineno))
+        return "There was an error generating the index. Check the logs"
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=False)
