@@ -1,7 +1,7 @@
 class EnterpriseSearchIndexDoc:
     def __init__(self, access, platform, experimental_strategy, data_category, workflow_type, data_format,
                  data_type, file_id, file_name, file_size, package_id, dois, redcap_id, sample_type, tissue_type,
-                 protocol, sex, age_binned, tissue_source, participant_id):
+                 protocol, sex, age_binned, tissue_source):
         self.access = access
         self.platform = platform
         self.experimental_strategy = experimental_strategy
@@ -21,4 +21,3 @@ class EnterpriseSearchIndexDoc:
         self.sex = sex
         self.age_binned = age_binned
         self.tissue_source = tissue_source
-        self.participant_id = participant_id

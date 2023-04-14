@@ -70,7 +70,7 @@ def generate_json(mydb, file_id = None, release_ver = None):
             if row["dl_file_id"] in documents:
                 index_doc = documents[row["dl_file_id"]]
                 # Not adding a new tissue source because we should only have one tissue source per file
-                index_doc.participant_id.append(row['redcap_id'])
+                index_doc.redcap_id.append(row['redcap_id'])
                 index_doc.sample_type.append(row['sample_type'])
                 index_doc.tissue_type.append(row['tissue_type'])
                 index_doc.protocol.append(row['protocol'])
@@ -82,15 +82,15 @@ def generate_json(mydb, file_id = None, release_ver = None):
             else:
                 index_doc = EnterpriseSearchIndexDoc(row["access"], row["platform"], row["experimental_strategy"], row["data_category"],
                                      row["workflow_type"], row["data_format"], row["data_type"], row["dl_file_id"],
-                                     row["file_name"], row["file_size"], row["package_id"], {row["doi"]}, row['redcap_id'], [row['sample_type']],
-                                     [row['tissue_type']], [row['protocol']], [row['sex']], [row['age_binned']], [row['tissue_source']], [row['redcap_id']])
+                                     row["file_name"], row["file_size"], row["package_id"], {row["doi"]}, [row['redcap_id']], [row['sample_type']],
+                                     [row['tissue_type']], [row['protocol']], [row['sex']], [row['age_binned']], [row['tissue_source']])
                 documents[row["dl_file_id"]] = index_doc
 
-        update_statement = '';
+        update_statement = '[';
         for id in documents:
-            update_statement = update_statement + get_enterprise_index_json(documents[id])
+            update_statement = update_statement + get_enterprise_index_json(documents[id]) + ","
         try:
-            return update_statement
+            return update_statement + ']'
         except NameError:
             log.error("Unable to process results");
             pass
