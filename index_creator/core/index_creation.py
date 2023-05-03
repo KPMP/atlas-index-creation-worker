@@ -27,7 +27,15 @@ def get_index_doc_json(index_doc):
 def get_enterprise_index_json(index_doc):
     try:
         index_doc.dois = list(index_doc.dois)
-        json_doc = json.dumps(index_doc.__dict__)
+        index = {}
+        for key in index_doc.__dict__:
+            if index_doc.__dict__[key] != "" and type(index_doc.__dict__[key]) != list and index_doc.__dict__[key] != None:
+                index[key] = index_doc.__dict__[key]
+            if type(index_doc.__dict__[key]) == list:
+                str_list = list(filter(None, index_doc.__dict__[key]))
+                if len(str_list) > 0:
+                    index[key] = str_list
+        json_doc = json.dumps(index)
         return json_doc
     except TypeError as err:
         log.error(err)
