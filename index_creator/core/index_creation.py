@@ -71,9 +71,12 @@ def generate_json(mydb, file_id = None, release_ver = None):
             log.warning("query returned 0 results. No updates to process")
             return "";
 
-        repository_json = {}
         for row in mycursor:
-
+            max_release_ver = get_max_release_ver(mydb)
+            if max_release_ver == row['release_version']:
+                row['release_version'] = "Recently Released"
+            else:
+                row['release_version'] = ""
             # If we already have a document for this file, add information to it
             if row["dl_file_id"] in documents:
                 index_doc = documents[row["dl_file_id"]]
@@ -86,12 +89,13 @@ def generate_json(mydb, file_id = None, release_ver = None):
                 index_doc.sex.append(row['sex'])
                 index_doc.tissue_source.append(row['tissue_source'])
                 index_doc.dois.add(row['doi'])
+                index_doc.release_version.add(row['release_version'])
             # If this is a new file, then we need to create the initial record and add it to our list of documents
             else:
                 index_doc = EnterpriseSearchIndexDoc(row["access"], row["platform"], row["experimental_strategy"], row["data_category"],
                                      row["workflow_type"], row["data_format"], row["data_type"], row["dl_file_id"],
                                      row["file_name"], row["file_size"], row["package_id"], {row["doi"]}, [row['redcap_id']], [row['sample_type']],
-                                     [row['tissue_type']], [row['protocol']], [row['sex']], [row['age_binned']], [row['tissue_source']])
+                                     [row['tissue_type']], [row['protocol']], [row['sex']], [row['age_binned']], [row['tissue_source']], [row['release_version']])
                 documents[row["dl_file_id"]] = index_doc
 
         update_statement = '[';
