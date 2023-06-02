@@ -21,3 +21,6 @@ class EnterpriseSearchIndexDoc:
         self.sex = sex
         self.age_binned = age_binned
         self.tissue_source = tissue_source
+        self.participant_id_sort = redcap_id.replace('-', '')
+        self.file_name_sort = file_name.slice(37)
+        self.platform_sort = "aaaaa" if not platform else platform
