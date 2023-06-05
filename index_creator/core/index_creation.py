@@ -85,7 +85,10 @@ def generate_json(mydb, file_id = None, release_ver = None):
                 index_doc.sex.append(row['sex'])
                 index_doc.tissue_source.append(row['tissue_source'])
                 index_doc.dois.add(row['doi'])
-                index_doc.participant_id_sort.append(row['redcap_id'][0].replace('-', '') if len(row['redcap_id']) == 1 else "Multiple Participants")
+                if len(index_doc.participant_id_sort) == 0:
+                    index_doc.participant_id_sort.append(row['redcap_id'][0].replace('-',''))
+                else:
+                    index_doc.participant_id_sort = ["Multiple Participants"]
                 index_doc.file_name_sort.append(row['file_name'][37:])
                 index_doc.platform_sort.append("aaaaa" if not row['platform'] else row['platform'])
             # If this is a new file, then we need to create the initial record and add it to our list of documents
