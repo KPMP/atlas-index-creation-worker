@@ -86,8 +86,6 @@ def generate_json(mydb, file_id = None, release_ver = None):
                 index_doc.tissue_source.append(row['tissue_source'])
                 index_doc.dois.add(row['doi'])
                 index_doc.participant_id_sort = ["Multiple Participants"]
-                index_doc.file_name_sort = row['file_name'][37:]
-                index_doc.platform_sort = "aaaaa" if not row['platform'] else row['platform']
             # If this is a new file, then we need to create the initial record and add it to our list of documents
             else:
                 index_doc = EnterpriseSearchIndexDoc(row["access"], row["platform"], row["experimental_strategy"], row["data_category"],
