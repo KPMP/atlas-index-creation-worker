@@ -1,7 +1,7 @@
 class EnterpriseSearchIndexDoc:
     def __init__(self, access, platform, experimental_strategy, data_category, workflow_type, data_format,
                  data_type, file_id, file_name, file_size, package_id, dois, redcap_id, sample_type, tissue_type,
-                 protocol, sex, age_binned, tissue_source):
+                 protocol, sex, age_binned, tissue_source, release_version):
         self.access = access
         self.platform = platform
         self.experimental_strategy = experimental_strategy
@@ -21,6 +21,7 @@ class EnterpriseSearchIndexDoc:
         self.sex = sex
         self.age_binned = age_binned
         self.tissue_source = tissue_source
+        self.release_version = release_version
         self.participant_id_sort = redcap_id[0].replace('-', '') if len(redcap_id) == 1 else "Multiple Participants"
         self.file_name_sort = file_name[37:]
         self.platform_sort = "aaaaa" if not platform else platform
