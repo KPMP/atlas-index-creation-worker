@@ -85,8 +85,10 @@ def generate_json(mydb, file_id = None, release_ver = None):
                 index_doc.sex.append(row['sex'])
                 index_doc.tissue_source.append(row['tissue_source'])
                 index_doc.dois.add(row['doi'])
-                index_doc.data_type.append(row['experimental_strategy'])
-                index_doc.data_type.append(row['workflow_type'])
+                index_doc.experimental_strategy.append(row['experimental_strategy'])
+                index_doc.experimental_strategy = [*set(index_doc.experimental_strategy)]
+                index_doc.workflow_type.append(row['workflow_type'])
+                index_doc.workflow_type = [*set(index_doc.workflow_type)]
                 index_doc.participant_id_sort = ["Multiple Participants"]
             # If this is a new file, then we need to create the initial record and add it to our list of documents
             else:
