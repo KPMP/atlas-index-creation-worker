@@ -29,10 +29,11 @@ def get_enterprise_index_json(index_doc):
         index_doc.dois = list(index_doc.dois)
         index = {}
         for key in index_doc.__dict__:
+
             if index_doc.__dict__[key] != "" and type(index_doc.__dict__[key]) != list and index_doc.__dict__[key] != None:
                 index[key] = index_doc.__dict__[key]
             if type(index_doc.__dict__[key]) == list:
-                str_list = list(filter(None, index_doc.__dict__[key]))
+                str_list = list(filter(None, set(index_doc.__dict__[key])))
                 if len(str_list) > 0:
                     index[key] = str_list
         json_doc = json.dumps(index)
